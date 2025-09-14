@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Memories 💕</title>
+    <meta name="description" content="A romantic, private app for couples to chat, share memories, and create their love story">
+    <meta name="theme-color" content="#ff6b9d">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.webmanifest">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/idb@7.1.1/build/iife/index-min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app" class="app-container">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loading-heart">💕</div>
+            <p>Loading Our Memories...</p>
+        </div>
+
+        <!-- Onboarding Screen -->
+        <div id="onboarding-screen" class="screen hidden">
+            <div class="onboarding-container">
+                <div class="onboarding-header">
+                    <h1>Welcome to Our Memories</h1>
+                    <p>Let's create your love story together</p>
+                </div>
+                
+                <form id="onboarding-form" class="onboarding-form">
+                    <div class="form-group">
+                        <label for="partner-a-name">Your Name</label>
+                        <input type="text" id="partner-a-name" required placeholder="Enter your name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="partner-b-name">Your Partner's Name</label>
+                        <input type="text" id="partner-b-name" required placeholder="Enter your partner's name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="love-date">Date We Said "I Love You"</label>
+                        <input type="date" id="love-date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="story-start">Our Story Begins...</label>
+                        <textarea id="story-start" required placeholder="Tell us how your love story began..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="device-name">This Device Name</label>
+                        <input type="text" id="device-name" required placeholder="e.g., Sarah's Phone">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Our Memories</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pairing Screen -->
+        <div id="pairing-screen" class="screen hidden">
+            <div class="pairing-container">
+                <div class="pairing-header">
+                    <h2>Pair Your Partner's Device</h2>
+                    <p>Share this code with your partner to connect your devices</p>
+                </div>
+                
+                <div class="pairing-content">
+                    <div class="qr-section">
+                        <div id="qr-code" class="qr-code"></div>
+                        <p class="qr-instructions">Scan this QR code on your partner's device</p>
+                    </div>
+                    
+                    <div class="pairing-code-section">
+                        <div class="pairing-code">
+                            <span id="pairing-code-display">123456</span>
+                        </div>
+                        <p class="code-instructions">Or enter this code manually</p>
+                    </div>
+                </div>
+                
+                <div class="pairing-actions">
+                    <button id="continue-to-app" class="btn btn-secondary">Continue to App</button>
+                    <button id="pair-another-device" class="btn btn-outline">Pair Another Device</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen hidden">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>Our Memories</h1>
+                    <p>Enter your name to continue</p>
+                </div>
+                
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <input type="text" id="login-name" required placeholder="Enter your name" autocomplete="off">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Enter Our Memories</button>
+                </form>
+                
+                <div id="login-error" class="error-message hidden">
+                    Name not recognized — please enter the exact name your partner set during onboarding.
+                </div>
+                
+                <div class="privacy-note">
+                    <small>Name-only login is convenient — please keep your device private.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Screen -->
+        <div id="main-app" class="screen hidden">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <h1 class="app-title">Our Memories</h1>
+                    <div class="header-actions">
+                        <button id="switch-perspective" class="btn-icon" title="Switch Perspective">
+                            <span class="icon">👥</span>
+                        </button>
+                        <button id="settings-btn" class="btn-icon" title="Settings">
+                            <span class="icon">⚙️</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navigation -->
+            <nav class="app-nav">
+                <button class="nav-btn active" data-screen="chat">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-label">Chat</span>
+                </button>
+                <button class="nav-btn" data-screen="memory-book">
+                    <span class="nav-icon">📖</span>
+                    <span class="nav-label">Memory Book</span>
+                </button>
+                <button class="nav-btn" data-screen="timeline">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">Timeline</span>
+                </button>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="app-main">
+                <!-- Chat Screen -->
+                <div id="chat-screen" class="content-screen active">
+                    <div class="chat-container">
+                        <div id="chat-messages" class="chat-messages">
+                            <div class="empty-state">
+                                <div class="empty-icon">💕</div>
+                                <h3>No messages yet</h3>
+                                <p>Say something sweet — your words will live here forever.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <div class="input-group">
+                                <button id="image-upload-btn" class="btn-icon" title="Add Image">
+                                    <span class="icon">📷</span>
+                                </button>
+                                <input type="file" id="image-input" accept="image/*" capture style="display: none;">
+                                
+                                <input type="text" id="message-input" placeholder="Type a sweet message..." maxlength="500">
+                                
+                                <button id="send-btn" class="btn-icon" title="Send">
+                                    <span class="icon">💌</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memory Book Screen -->
+                <div id="memory-book-screen" class="content-screen">
+                    <div class="memory-book-container">
+                        <div id="book-cover" class="book-cover">
+                            <div class="cover-content">
+                                <h2 id="cover-title">Our Memories</h2>
+                                <p class="cover-subtitle">Tap to open</p>
+                            </div>
+                        </div>
+                        
+                        <div id="book-pages" class="book-pages hidden">
+                            <div class="book-controls">
+                                <button id="prev-page" class="btn-icon" disabled>
+                                    <span class="icon">←</span>
+                                </button>
+                                <span id="page-indicator" class="page-indicator">1 / 1</span>
+                                <button id="next-page" class="btn-icon" disabled>
+                                    <span class="icon">→</span>
+                                </button>
+                            </div>
+                            
+                            <div id="book-content" class="book-content">
+                                <!-- Pages will be dynamically generated -->
+                            </div>
+                            
+                            <button id="add-memory-btn" class="btn btn-primary add-memory-btn">
+                                <span class="icon">➕</span>
+                                Add Memory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Screen -->
+                <div id="timeline-screen" class="content-screen">
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <h2>Our Love Timeline</h2>
+                            <div class="timeline-filters">
+                                <button class="filter-btn active" data-filter="all">All</button>
+                                <button class="filter-btn" data-filter="messages">Messages</button>
+                                <button class="filter-btn" data-filter="images">Images</button>
+                                <button class="filter-btn" data-filter="memories">Memories</button>
+                            </div>
+                        </div>
+                        
+                        <div id="timeline-content" class="timeline-content">
+                            <!-- Timeline items will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen hidden">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <button id="back-to-main" class="btn-icon">
+                        <span class="icon">←</span>
+                    </button>
+                    <h2>Settings</h2>
+                </div>
+                
+                <div class="settings-content">
+                    <div class="setting-group">
+                        <h3>Notifications</h3>
+                        <label class="setting-item">
+                            <input type="checkbox" id="notifications-enabled">
+                            <span class="setting-label">Enable notifications</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3>Appearance</h3>
+                        <label class="setting-item">
+                            <input type="checkbox" id="floating-hearts">
+                            <span class="setting-label">Floating hearts animation</span>
+                        </label>
+                        <label class="setting-item">
+                            <input type="checkbox" id="high-contrast">
+                            <span class="setting-label">High contrast theme</span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3>Data</h3>
+                        <button id="export-data" class="btn btn-outline">Export Our Memories</button>
+                        <button id="import-data" class="btn btn-outline">Import Memories</button>
+                        <input type="file" id="import-file" accept=".zip" style="display: none;">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3>Privacy</h3>
+                        <div class="privacy-info">
+                            <p>This app is local-first. All messages, images and memories are stored only on your device (IndexedDB). Name-only login is convenient but not cryptographically secure — keep devices private and enable pairing for extra safety.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Memory Modal -->
+    <div id="add-memory-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add a Beautiful Memory</h3>
+                <button id="close-memory-modal" class="btn-icon">
+                    <span class="icon">✕</span>
+                </button>
+            </div>
+            
+            <form id="memory-form" class="modal-body">
+                <div class="form-group">
+                    <label for="memory-title">Memory Title</label>
+                    <input type="text" id="memory-title" required placeholder="e.g., Our first date">
+                </div>
+                
+                <div class="form-group">
+                    <label for="memory-date">Date</label>
+                    <input type="date" id="memory-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memory-body">Description</label>
+                    <textarea id="memory-body" required placeholder="Tell us about this special moment..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="memory-images">Add Photos</label>
+                    <input type="file" id="memory-images" accept="image/*" multiple>
+                    <div id="memory-image-preview" class="image-preview"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="setting-item">
+                        <input type="checkbox" id="memory-lock">
+                        <span class="setting-label">Lock with PIN (optional)</span>
+                    </label>
+                </div>
+            </form>
+            
+            <div class="modal-footer">
+                <button id="cancel-memory" class="btn btn-secondary">Cancel</button>
+                <button id="save-memory" class="btn btn-primary">Save Memory</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Lightbox -->
+    <div id="image-lightbox" class="modal hidden">
+        <div class="lightbox-content">
+            <button id="close-lightbox" class="btn-icon lightbox-close">
+                <span class="icon">✕</span>
+            </button>
+            <img id="lightbox-image" src="" alt="Full size image">
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Floating Hearts Container -->
+    <div id="floating-hearts" class="floating-hearts"></div>
+
+    <!-- Scripts -->
+    <script src="db.js"></script>
+    <script src="components/qr.js"></script>
+    <script src="components/image-utils.js"></script>
+    <script src="components/compression.js"></script>
+    <script src="components/notifications.js"></script>
+    <script src="components/export-import.js"></script>
+    <script src="ui/onboarding.js"></script>
+    <script src="ui/login.js"></script>
+    <script src="ui/chat.js"></script>
+    <script src="ui/memorybook.js"></script>
+    <script src="ui/timeline.js"></script>
+    <script src="ui/settings.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
