@@ -36,6 +36,17 @@ class LoginUI {
                 }
             });
         }
+
+        // Pairing code button
+        const pairingBtn = document.getElementById('pairing-code-btn');
+        if (pairingBtn) {
+            pairingBtn.addEventListener('click', () => {
+                this.showPairingModal();
+            });
+        }
+
+        // Load quick devices
+        this.loadQuickDevices();
     }
 
     focusInput() {
@@ -256,6 +267,220 @@ class LoginUI {
         } catch (error) {
             console.error('Error checking login eligibility:', error);
             return false;
+        }
+    }
+
+    // Show pairing modal
+    showPairingModal() {
+        const modal = document.getElementById('pairing-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            
+            // Focus on pairing code input
+            const codeInput = document.getElementById('pairing-code-input');
+            if (codeInput) {
+                setTimeout(() => codeInput.focus(), 100);
+            }
+        }
+    }
+
+    // Hide pairing modal
+    hidePairingModal() {
+        const modal = document.getElementById('pairing-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            
+            // Clear form
+            document.getElementById('pairing-code-input').value = '';
+            document.getElementById('device-name-input').value = '';
+            this.clearPairingError();
+            this.clearPairingSuccess();
+        }
+    }
+
+    // Load quick devices for login
+    async loadQuickDevices() {
+        try {
+            const couple = await window.db.findCouple();
+            if (!couple) return;
+
+            const devices = await window.db.getDevices(couple.id);
+            const quickDevicesContainer = document.getElementById('quick-devices');
+            const deviceList = document.getElementById('device-list');
+
+            if (devices.length > 0) {
+                quickDevicesContainer.classList.remove('hidden');
+                deviceList.innerHTML = '';
+
+                devices.forEach(device => {
+                    const deviceElement = this.createDeviceElement(device);
+                    deviceList.appendChild(deviceElement);
+                });
+            } else {
+                quickDevicesContainer.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Failed to load quick devices:', error);
+        }
+    }
+
+    // Create device element for quick login
+    createDeviceElement(device) {
+        const div = document.createElement('div');
+        div.className = 'device-item';
+        
+        const deviceInfo = this.getDeviceInfo(device.deviceInfo);
+        
+        div.innerHTML = `
+            <div class="device-info">
+                <div class="device-name">${device.displayName}</div>
+                <div class="device-details">${deviceInfo} • ${window.app.formatDate(device.pairedAt)}</div>
+            </div>
+            <button class="device-login-btn" data-device-id="${device.id}">
+                Login
+            </button>
+        `;
+
+        // Add click handler
+        const loginBtn = div.querySelector('.device-login-btn');
+        loginBtn.addEventListener('click', () => {
+            this.quickLogin(device);
+        });
+
+        return div;
+    }
+
+    // Get device info string
+    getDeviceInfo(deviceInfo) {
+        if (!deviceInfo) return 'Unknown device';
+        
+        const parts = [];
+        if (deviceInfo.platform) parts.push(deviceInfo.platform);
+        if (deviceInfo.language) parts.push(deviceInfo.language);
+        
+        return parts.join(' • ') || 'Unknown device';
+    }
+
+    // Quick login with device
+    async quickLogin(device) {
+        try {
+            const couple = await window.db.getCouple(device.coupleId);
+            if (!couple) {
+                this.showError('Device not found');
+                return;
+            }
+
+            // Set current user and couple
+            window.app.setCurrentUser(device.displayName);
+            window.app.setCurrentCouple(couple);
+
+            // Show success message
+            window.app.showToast(`Welcome back, ${device.displayName}!`, 'success');
+
+            // Hide login screen
+            document.getElementById('login-screen').classList.add('hidden');
+
+            // Show main app
+            window.app.showMainApp();
+        } catch (error) {
+            console.error('Quick login failed:', error);
+            this.showError('Quick login failed');
+        }
+    }
+
+    // Handle pairing code submission
+    async handlePairingCode() {
+        const pairingCodeInput = document.getElementById('pairing-code-input');
+        const deviceNameInput = document.getElementById('device-name-input');
+        
+        const pairingCode = pairingCodeInput.value.trim();
+        const deviceName = deviceNameInput.value.trim();
+
+        if (!pairingCode || !deviceName) {
+            this.showPairingError('Please fill in both pairing code and device name');
+            return;
+        }
+
+        try {
+            // Parse pairing code
+            const pairingData = window.pairingCode.parsePairingCode(pairingCode);
+            
+            // Validate pairing token
+            const providedTokenHash = await window.db.hashString(pairingData.pairingToken);
+            
+            // Create couple data
+            const coupleData = {
+                partnerAName: pairingData.partnerAName,
+                partnerBName: pairingData.partnerBName,
+                coverTitle: pairingData.coverTitle,
+                loveDate: pairingData.loveDate,
+                storyStart: pairingData.storyStart,
+                pairingTokenHash: providedTokenHash
+            };
+
+            // Save couple
+            const couple = await window.db.createCouple(coupleData);
+            
+            // Add device
+            await window.db.addDevice({
+                coupleId: couple.id,
+                displayName: deviceName,
+                deviceInfo: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    timestamp: new Date().toISOString()
+                }
+            });
+
+            // Show success
+            this.showPairingSuccess(`Paired successfully as ${deviceName}. You can now log in with your name.`);
+            
+            // Close modal after delay
+            setTimeout(() => {
+                this.hidePairingModal();
+                this.loadQuickDevices(); // Refresh device list
+            }, 2000);
+
+        } catch (error) {
+            console.error('Pairing failed:', error);
+            this.showPairingError('Invalid pairing code: ' + error.message);
+        }
+    }
+
+    // Show pairing error
+    showPairingError(message) {
+        const errorElement = document.getElementById('pairing-error');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+        }
+        this.clearPairingSuccess();
+    }
+
+    // Show pairing success
+    showPairingSuccess(message) {
+        const successElement = document.getElementById('pairing-success');
+        if (successElement) {
+            successElement.textContent = message;
+            successElement.classList.remove('hidden');
+        }
+        this.clearPairingError();
+    }
+
+    // Clear pairing error
+    clearPairingError() {
+        const errorElement = document.getElementById('pairing-error');
+        if (errorElement) {
+            errorElement.classList.add('hidden');
+        }
+    }
+
+    // Clear pairing success
+    clearPairingSuccess() {
+        const successElement = document.getElementById('pairing-success');
+        if (successElement) {
+            successElement.classList.add('hidden');
         }
     }
 }

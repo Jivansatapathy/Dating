@@ -277,6 +277,78 @@ p {
 }
 
 /* Privacy Note */
+.login-actions {
+    margin: var(--spacing-lg) 0;
+    text-align: center;
+}
+
+.quick-devices {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: rgba(255, 107, 157, 0.05);
+    border-radius: var(--radius-md);
+}
+
+.quick-devices h3 {
+    color: var(--primary-pink);
+    margin-bottom: var(--spacing-md);
+    font-size: 1.1rem;
+}
+
+.device-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.device-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--white);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--medium-gray);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.device-item:hover {
+    border-color: var(--primary-pink);
+    box-shadow: 0 2px 8px rgba(255, 107, 157, 0.2);
+}
+
+.device-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.device-name {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.device-details {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.device-login-btn {
+    background: var(--gradient-primary);
+    color: var(--white);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.device-login-btn:hover {
+    transform: scale(1.05);
+}
+
 .privacy-note {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
@@ -334,30 +406,7 @@ p {
 }
 
 .pairing-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-xxl);
     margin: var(--spacing-xxl) 0;
-    align-items: center;
-}
-
-.qr-section {
-    background: var(--white);
-    padding: var(--spacing-xl);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-}
-
-.qr-code {
-    width: 200px;
-    height: 200px;
-    margin: 0 auto var(--spacing-lg);
-    background: var(--white);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--medium-gray);
 }
 
 .pairing-code-section {
@@ -365,15 +414,49 @@ p {
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
 }
 
-.pairing-code {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--primary-pink);
-    margin-bottom: var(--spacing-lg);
+.pairing-code-display {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.pairing-code-textarea {
+    width: 100%;
+    min-height: 120px;
     font-family: 'Courier New', monospace;
-    letter-spacing: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding: var(--spacing-md);
+    border: 2px solid var(--medium-gray);
+    border-radius: var(--radius-md);
+    background: var(--light-gray);
+    resize: vertical;
+    word-break: break-all;
+}
+
+.copy-pairing-code-btn {
+    max-width: 200px;
+}
+
+.copy-pairing-code-btn.copied {
+    background: #28a745;
+    color: white;
+}
+
+.code-instructions {
+    color: var(--text-light);
+    margin-top: var(--spacing-md);
+}
+
+.code-expiry {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: var(--spacing-sm);
 }
 
 .pairing-actions {
@@ -1617,6 +1700,84 @@ textarea:focus,
 
 .setting-item:hover {
     background: rgba(255, 107, 157, 0.1);
+}
+
+.device-management {
+    margin-top: var(--spacing-lg);
+}
+
+.device-management h4 {
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-md);
+    font-size: 1rem;
+}
+
+.paired-devices-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.paired-device-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--white);
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--radius-md);
+}
+
+.device-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.device-name {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.device-details {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.unpair-btn {
+    background: #dc3545;
+    color: var(--white);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.unpair-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+.pairing-management {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--light-gray);
+}
+
+.pairing-note {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: var(--spacing-sm);
+    font-style: italic;
+}
+
+.pairing-privacy-note {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: var(--spacing-sm);
+    font-style: italic;
 }
 
 /* Export/Import Enhancements */

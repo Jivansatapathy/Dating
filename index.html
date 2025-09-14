@@ -21,7 +21,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <!-- External Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/idb@7.1.1/build/iife/index-min.js"></script>
     
@@ -80,27 +79,21 @@
         <div id="pairing-screen" class="screen hidden">
             <div class="pairing-container">
                 <div class="pairing-header">
-                    <h2>Pair Your Partner's Device</h2>
-                    <p>Share this code with your partner to connect your devices</p>
+                    <h2>Your Pairing Code</h2>
+                    <p>Share this code with your partner so they can pair their device</p>
                 </div>
                 
                 <div class="pairing-content">
-                    <div class="qr-section">
-                        <div id="qr-code" class="qr-code"></div>
-                        <p class="qr-instructions">Scan this QR code on your partner's device</p>
-                    </div>
-                    
                     <div class="pairing-code-section">
-                        <div class="pairing-code">
-                            <span id="pairing-code-display">123456</span>
-                        </div>
-                        <p class="code-instructions">Or enter this code manually</p>
+                        <div id="pairing-code-display"></div>
+                        <p class="code-instructions">Share this code with your partner</p>
+                        <p class="code-expiry">Use within 24 hours</p>
                     </div>
                 </div>
                 
                 <div class="pairing-actions">
-                    <button id="continue-to-app" class="btn btn-secondary">Continue to App</button>
-                    <button id="pair-another-device" class="btn btn-outline">Pair Another Device</button>
+                    <button id="continue-to-app" class="btn btn-primary">Continue to App</button>
+                    <button id="regenerate-code" class="btn btn-outline">Regenerate Code</button>
                 </div>
             </div>
         </div>
@@ -123,6 +116,17 @@
                 
                 <div id="login-error" class="error-message hidden">
                     Name not recognized — please enter the exact name your partner set during onboarding.
+                </div>
+                
+                <div class="login-actions">
+                    <button id="pairing-code-btn" class="btn btn-outline">Have a pairing code? Paste it</button>
+                </div>
+                
+                <div id="quick-devices" class="quick-devices hidden">
+                    <h3>Quick Login</h3>
+                    <div id="device-list" class="device-list">
+                        <!-- Paired devices will be listed here -->
+                    </div>
                 </div>
                 
                 <div class="privacy-note">
@@ -260,6 +264,24 @@
                 
                 <div class="settings-content">
                     <div class="setting-group">
+                        <h3>Login & Devices</h3>
+                        <label class="setting-item">
+                            <input type="checkbox" id="auto-login">
+                            <span class="setting-label">Auto-login on this device</span>
+                        </label>
+                        <div class="device-management">
+                            <h4>Paired Devices</h4>
+                            <div id="paired-devices-list" class="paired-devices-list">
+                                <!-- Paired devices will be listed here -->
+                            </div>
+                        </div>
+                        <div class="pairing-management">
+                            <button id="regenerate-pairing-code" class="btn btn-outline">Regenerate Pairing Code</button>
+                            <p class="pairing-note">This will invalidate the current pairing code and generate a new one.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
                         <h3>Notifications</h3>
                         <label class="setting-item">
                             <input type="checkbox" id="notifications-enabled">
@@ -290,6 +312,7 @@
                         <h3>Privacy</h3>
                         <div class="privacy-info">
                             <p>This app is local-first. All messages, images and memories are stored only on your device (IndexedDB). Name-only login is convenient but not cryptographically secure — keep devices private and enable pairing for extra safety.</p>
+                            <p class="pairing-privacy-note">Pairing code contains only your names and love story data, stored only on your devices.</p>
                         </div>
                     </div>
                 </div>
@@ -298,6 +321,38 @@
     </div>
 
     <!-- Modals -->
+    <!-- Pairing Code Modal -->
+    <div id="pairing-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pair Your Device</h3>
+                <button id="close-pairing-modal" class="btn-icon">
+                    <span class="icon">✕</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="pairing-code-input">Pairing Code</label>
+                    <textarea id="pairing-code-input" placeholder="Paste the pairing code here..." rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="device-name-input">Device Name</label>
+                    <input type="text" id="device-name-input" placeholder="e.g., Bob's Phone" required>
+                </div>
+                
+                <div id="pairing-error" class="error-message hidden"></div>
+                <div id="pairing-success" class="success-message hidden"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="cancel-pairing" class="btn btn-secondary">Cancel</button>
+                <button id="pair-device" class="btn btn-primary">Pair Device</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Memory Modal -->
     <div id="add-memory-modal" class="modal hidden">
         <div class="modal-content">

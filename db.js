@@ -214,6 +214,24 @@ class OurMemoriesDB {
         });
     }
 
+    async deleteDevice(deviceId) {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['devices'], 'readwrite');
+            const store = transaction.objectStore('devices');
+            const request = store.delete(deviceId);
+            
+            request.onsuccess = () => {
+                console.log('Device deleted:', deviceId);
+                resolve();
+            };
+            
+            request.onerror = () => {
+                console.error('Failed to delete device');
+                reject(request.error);
+            };
+        });
+    }
+
     // Messages CRUD
     async saveMessage(messageData) {
         return new Promise((resolve, reject) => {

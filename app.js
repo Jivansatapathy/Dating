@@ -86,6 +86,40 @@ class OurMemoriesApp {
             this.hideSettings();
         });
 
+        // Pairing modal event listeners
+        document.getElementById('pairing-code-btn')?.addEventListener('click', () => {
+            if (window.loginUI) {
+                window.loginUI.showPairingModal();
+            }
+        });
+
+        document.getElementById('close-pairing-modal')?.addEventListener('click', () => {
+            if (window.loginUI) {
+                window.loginUI.hidePairingModal();
+            }
+        });
+
+        document.getElementById('cancel-pairing')?.addEventListener('click', () => {
+            if (window.loginUI) {
+                window.loginUI.hidePairingModal();
+            }
+        });
+
+        document.getElementById('pair-device')?.addEventListener('click', () => {
+            if (window.loginUI) {
+                window.loginUI.handlePairingCode();
+            }
+        });
+
+        // Close pairing modal when clicking outside
+        document.getElementById('pairing-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'pairing-modal') {
+                if (window.loginUI) {
+                    window.loginUI.hidePairingModal();
+                }
+            }
+        });
+
         // Online/offline status
         window.addEventListener('online', () => {
             this.isOnline = true;
@@ -464,6 +498,25 @@ class OurMemoriesApp {
             return this.currentCouple?.partnerAName;
         }
         return null;
+    }
+
+    // Logout functionality - only clears session, keeps all data
+    logout() {
+        // Clear only session data (localStorage)
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentCouple');
+        
+        // Reset app state
+        this.currentUser = null;
+        this.currentCouple = null;
+        
+        // Show login screen
+        this.showLoginScreen();
+        
+        // Show logout message
+        this.showToast('Logged out successfully', 'success');
+        
+        // Note: All chat, images, and memories remain in IndexedDB
     }
 
     // Cleanup method

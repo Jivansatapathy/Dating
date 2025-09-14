@@ -247,28 +247,16 @@ class OnboardingUI {
         const pairingScreen = document.getElementById('pairing-screen');
         pairingScreen.classList.remove('hidden');
 
-        // Generate QR code
-        this.generateQRCode(couple);
-
-        // Generate numeric code
-        this.generateNumericCode();
+        // Generate and display pairing code
+        this.generatePairingCode(couple);
 
         // Set up pairing screen event listeners
         this.setupPairingEventListeners(couple);
     }
 
-    generateQRCode(couple) {
-        const qrData = window.QRCodeComponent.generatePairingData(
-            couple.id,
-            couple.pairingToken
-        );
-
-        window.QRCodeComponent.generateQRCode(qrData, 'qr-code');
-    }
-
-    generateNumericCode() {
-        const numericCode = window.QRCodeComponent.generateNumericCode();
-        document.getElementById('pairing-code-display').textContent = numericCode;
+    generatePairingCode(couple) {
+        const pairingCode = window.pairingCode.generatePairingCode(couple);
+        window.pairingCode.displayPairingCode(pairingCode, 'pairing-code-display');
     }
 
     setupPairingEventListeners(couple) {
@@ -277,10 +265,30 @@ class OnboardingUI {
             this.continueToApp(couple);
         });
 
-        // Pair another device button
-        document.getElementById('pair-another-device').addEventListener('click', () => {
-            this.pairAnotherDevice(couple);
+        // Regenerate code button
+        document.getElementById('regenerate-code').addEventListener('click', () => {
+            this.regeneratePairingCode(couple);
         });
+    }
+
+    async regeneratePairingCode(couple) {
+        try {
+            // Generate new pairing token
+            const newToken = window.pairingCode.generateNewPairingToken();
+            const newTokenHash = await window.db.hashString(newToken);
+            
+            // Update couple with new token
+            couple.pairingToken = newToken;
+            await window.db.updateCouple(couple.id, { pairingTokenHash: newTokenHash });
+            
+            // Regenerate and display new pairing code
+            this.generatePairingCode(couple);
+            
+            window.app.showToast('New pairing code generated!', 'success');
+        } catch (error) {
+            console.error('Failed to regenerate pairing code:', error);
+            window.app.showToast('Failed to regenerate pairing code', 'error');
+        }
     }
 
     continueToApp(couple) {

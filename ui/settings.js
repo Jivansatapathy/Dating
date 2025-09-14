@@ -58,6 +58,22 @@ class SettingsUI {
                 this.handleImportFile(e.target.files[0]);
             });
         }
+
+        // Auto-login toggle
+        const autoLoginToggle = document.getElementById('auto-login');
+        if (autoLoginToggle) {
+            autoLoginToggle.addEventListener('change', (e) => {
+                this.updateAutoLoginSetting(e.target.checked);
+            });
+        }
+
+        // Regenerate pairing code
+        const regenerateBtn = document.getElementById('regenerate-pairing-code');
+        if (regenerateBtn) {
+            regenerateBtn.addEventListener('click', () => {
+                this.handleRegeneratePairingCode();
+            });
+        }
     }
 
     async loadSettings() {
@@ -90,6 +106,15 @@ class SettingsUI {
         if (highContrastToggle) {
             highContrastToggle.checked = this.settings.theme === 'high-contrast';
         }
+
+        // Update auto-login toggle
+        const autoLoginToggle = document.getElementById('auto-login');
+        if (autoLoginToggle) {
+            autoLoginToggle.checked = this.settings.autoLogin || false;
+        }
+
+        // Load paired devices
+        this.loadPairedDevices();
     }
 
     async updateNotificationSetting(enabled) {
@@ -375,6 +400,120 @@ class SettingsUI {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async updateAutoLoginSetting(enabled) {
+        try {
+            this.settings.autoLogin = enabled;
+            await window.db.updateSettings(this.settings);
+            
+            this.showSuccess(enabled ? 'Auto-login enabled' : 'Auto-login disabled');
+        } catch (error) {
+            console.error('Failed to update auto-login setting:', error);
+            this.showError('Failed to update auto-login setting');
+        }
+    }
+
+    async loadPairedDevices() {
+        try {
+            const couple = await window.db.findCouple();
+            if (!couple) return;
+
+            const devices = await window.db.getDevices(couple.id);
+            const devicesList = document.getElementById('paired-devices-list');
+            
+            if (devicesList) {
+                devicesList.innerHTML = '';
+                
+                if (devices.length === 0) {
+                    devicesList.innerHTML = '<p class="no-devices">No paired devices</p>';
+                    return;
+                }
+
+                devices.forEach(device => {
+                    const deviceElement = this.createDeviceElement(device);
+                    devicesList.appendChild(deviceElement);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load paired devices:', error);
+        }
+    }
+
+    createDeviceElement(device) {
+        const div = document.createElement('div');
+        div.className = 'paired-device-item';
+        
+        const deviceInfo = this.getDeviceInfo(device.deviceInfo);
+        
+        div.innerHTML = `
+            <div class="device-info">
+                <div class="device-name">${device.displayName}</div>
+                <div class="device-details">${deviceInfo} • ${window.app.formatDate(device.pairedAt)}</div>
+            </div>
+            <button class="unpair-btn" data-device-id="${device.id}">
+                Unpair
+            </button>
+        `;
+
+        // Add click handler for unpair button
+        const unpairBtn = div.querySelector('.unpair-btn');
+        unpairBtn.addEventListener('click', () => {
+            this.handleUnpairDevice(device.id);
+        });
+
+        return div;
+    }
+
+    getDeviceInfo(deviceInfo) {
+        if (!deviceInfo) return 'Unknown device';
+        
+        const parts = [];
+        if (deviceInfo.platform) parts.push(deviceInfo.platform);
+        if (deviceInfo.language) parts.push(deviceInfo.language);
+        
+        return parts.join(' • ') || 'Unknown device';
+    }
+
+    async handleUnpairDevice(deviceId) {
+        if (!confirm('Are you sure you want to unpair this device? This will remove it from your account.')) {
+            return;
+        }
+
+        try {
+            await window.db.deleteDevice(deviceId);
+            this.showSuccess('Device unpaired successfully');
+            this.loadPairedDevices(); // Refresh the list
+        } catch (error) {
+            console.error('Failed to unpair device:', error);
+            this.showError('Failed to unpair device');
+        }
+    }
+
+    async handleRegeneratePairingCode() {
+        if (!confirm('This will invalidate the current pairing code and generate a new one. Are you sure?')) {
+            return;
+        }
+
+        try {
+            const couple = await window.db.findCouple();
+            if (!couple) {
+                this.showError('No couple found');
+                return;
+            }
+
+            // Generate new pairing token
+            const newToken = window.pairingCode.generateNewPairingToken();
+            const newTokenHash = await window.db.hashString(newToken);
+            
+            // Update couple with new token
+            await window.db.updateCouple(couple.id, { pairingTokenHash: newTokenHash });
+            
+            this.showSuccess('New pairing code generated! Share the new code with your partner.');
+        } catch (error) {
+            console.error('Failed to regenerate pairing code:', error);
+            this.showError('Failed to regenerate pairing code');
+        }
     }
 
     // Method to refresh settings (called when switching screens)
